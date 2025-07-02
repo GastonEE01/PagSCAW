@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguridad y Calidad de Aplicación Web</title>
+    
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /**/
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 180px);
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.8rem;
+        }
+
+        .sidebar-btn {
+            width: 100%;
+            padding: 1.2rem;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sidebar-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(8px);
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .sidebar-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .sidebar-btn i {
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .pdf-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+        }
+
+        .pdf-toolbar {
+            background: white;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            padding: 0.6rem 1.2rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toolbar-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .toolbar-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .page-info {
+            margin-left: auto;
+            font-weight: 600;
+            color: #666;
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .pdf-viewer {
+            flex: 1;
+            overflow: auto;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .pdf-canvas {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            max-width: 100%;
+            height: auto;
+            background: white;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 1.3rem;
+            color: #666;
+            gap: 1rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            max-width: 500px;
+        }
+
+        .welcome-message i {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-message h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-message p {
+            line-height: 1.6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+                min-height: calc(100vh - 180px);
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 250px;
+                order: 2;
+            }
+
+            .pdf-container {
+                order: 1;
+                min-height: 60vh;
+            }
+
+            .pdf-toolbar {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            .page-info {
+                margin-left: 0;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-buttons {
+                flex-wrap: wrap;
+            }
+
+            .sidebar-btn {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pdf-viewer {
+                padding: 1rem;
+            }
+
+            .sidebar-btn {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .toolbar-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🔒 Seguridad y Calidad de Aplicación Web</h1>
+        <p>Resúmenes y material de estudio organizados por unidades</p>
+        <div class="nav-buttons">
+            <button class="nav-btn">🏠 Inicio</button>
+            <button class="nav-btn">📖 Resúmenes</button>
+            <button class="nav-btn">📝 Parciales</button>
+            <button class="nav-btn">📚 Bibliografía</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <h3>📚 Unidades de Estudio</h3>
+            <div class="sidebar-item">
+                <button class="sidebar-btn" onclick="loadUnidad1()">
+                    <i class="fas fa-book"></i>
+                    Unidad 1 - Introducción
+                </button>
+            </div>
+            <div class="sidebar-item">
+                <button class="sidebar-btn" onclick="loadUnidad2()">
+                    <i class="fas fa-graduation-cap"></i>
+                    Unidad 2 - Fundamentos
+                </button>
+            </div>
+            <div class="sidebar-item">
+                <button class="sidebar-btn" onclick="loadPDFSafe('pdfs/Unidad 3.pdf')">
+                    <i class="fas fa-shield-alt"></i>
+                    Unidad 3 - Seguridad Web
+                </button>
+            </div>
+            <div class="sidebar-item">
+                <button class="sidebar-btn" onclick="loadPDFSafe('pdfs/Unidad 4.pdf')">
+                    <i class="fas fa-lock"></i>
+                    Unidad 4 - Autenticación
+                </button>
+            </div>
+            <div class="sidebar-item">
+                <button class="sidebar-btn" onclick="loadPDFSafe('pdfs/Unidad 5.pdf')">
+                    <i class="fas fa-user-shield"></i>
+                    Unidad 5 - Autorización
+                </button>
+            </div>
+            <div class="sidebar-item">
+                <button class="sidebar-btn" onclick="loadPDFSafe('pdfs/Unidad 6.pdf')">
+                    <i class="fas fa-check-circle"></i>
+                    Unidad 6 - Calidad y Testing
+                </button>
+            </div>
+        </div>
+
+        <div class="pdf-container">
+            <div class="pdf-toolbar">
+                <button class="toolbar-btn" id="prev-btn" onclick="previousPage()" disabled>
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <button class="toolbar-btn" id="next-btn" onclick="nextPage()" disabled>
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="toolbar-btn" onclick="zoomIn()">
+                    <i class="fas fa-search-plus"></i> Zoom +
+                </button>
+                <button class="toolbar-btn" onclick="zoomOut()">
+                    <i class="fas fa-search-minus"></i> Zoom -
+                </button>
+                <button class="toolbar-btn" onclick="resetZoom()">
+                    <i class="fas fa-expand-arrows-alt"></i> Reset
+                </button>
+                <div class="page-info">
+                    Página <span id="current-page">-</span> de <span id="total-pages">-</span>
+                </div>
+            </div>
+
+            <div class="pdf-viewer" id="pdf-viewer">
+                <div class="welcome-message">
+                    <i class="fas fa-file-pdf"></i>
+                    <h2>Bienvenido a Seguridad Web</h2>
+                    <p>Selecciona una unidad del menú lateral para comenzar a estudiar. 
+                    Aquí encontrarás todos los resúmenes organizados por temas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurar PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let currentPDF = null;
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentScale = 1.5;
+
+        // Función para cargar Unidad 1 (Google Drive)
+        function loadUnidad1() {
+            document.getElementById('pdf-viewer').innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="color: #333; margin-bottom: 10px;">📚 Unidad 1 - Introducción</h2>
+                        <p style="color: #666;">Material de estudio de la Unidad 1</p>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/1PidIDfmQ5giC4A3P2VXwNKUWiYYTRX0b/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/1O_zDrlc3VDoYoNNMB1lYNOIYqjZB9e71/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/1bNzqy1PdkWbXmtjnKA1vbN4msjScmcJR/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                </div>
+            `;
+            
+            // Actualizar botones activos
+            updateActiveButton(event.target);
+        }
+
+        // Función para cargar Unidad 2 (Google Drive)
+        function loadUnidad2() {
+            document.getElementById('pdf-viewer').innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="color: #333; margin-bottom: 10px;">🎓 Unidad 2 - Fundamentos</h2>
+                        <p style="color: #666;">Material de estudio de la Unidad 2</p>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/19CvUcDAQEr9kEPtEPXzq-8yHNHGxIzR3/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/17UDqjE_Fv37X1FXGgBHWRlsO4q9M6x0H/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/1T-FjJ7v5Sx-AtxQb_W0sSX8fqx3FpDqP/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                    
+                    <div style="border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <iframe 
+                            src="https://drive.google.com/file/d/18aKWvRtYU7Q8aLcl-CM6D8mc4PwbsxuJ/preview" 
+                            width="100%" 
+                            height="600px" 
+                            allow="autoplay"
+                            style="border: none;">
+                        </iframe>
+                    </div>
+                </div>
+            `;
+            
+            // Actualizar botones activos
+            updateActiveButton(event.target);
+        }
+
+        // Función segura para cargar PDFs
+        async function loadPDFSafe(url) {
+            try {
+                // Mostrar loading
+                document.getElementById('pdf-viewer').innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Cargando PDF...</div>
+                    </div>
+                `;
+
+                // Verificar primero si el archivo existe
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Archivo no encontrado: ${response.status} - ${response.statusText}`);
+                }
+
+                // Si el archivo existe, cargar con PDF.js
+                await loadPDF(url);
+
+            } catch (error) {
+                console.error('Error en loadPDFSafe:', error);
+                document.getElementById('pdf-viewer').innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
+                        <div>Error al cargar el PDF</div>
+                        <div style="font-size: 0.9rem; color: #999;">${error.message}</div>
+                        <div style="font-size: 0.8rem; color: #999; margin-top: 10px;">Archivo: ${url}</div>
+                        <div style="font-size: 0.8rem; color: #999; margin-top: 5px;">Verifica que el archivo esté en la carpeta pdfs/</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadPDF(url) {
+            try {
+                // Cargar PDF directamente
+                const loadingTask = pdfjsLib.getDocument(url);
+                
+                // Agregar timeout para evitar esperas infinitas
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Timeout al cargar PDF')), 10000);
+                });
+
+                currentPDF = await Promise.race([loadingTask.promise, timeoutPromise]);
+                totalPages = currentPDF.numPages;
+                currentPage = 1;
+
+                // Actualizar información de páginas
+                document.getElementById('current-page').textContent = currentPage;
+                document.getElementById('total-pages').textContent = totalPages;
+
+                // Habilitar/deshabilitar botones
+                updateNavigationButtons();
+
+                // Renderizar primera página
+                await renderPage(currentPage);
+
+                // Actualizar botones activos
+                updateActiveButton(event.target);
+
+            } catch (error) {
+                console.error('Error cargando PDF:', error);
+                throw new Error('Error al procesar el PDF: ' + error.message);
+            }
+        }
+
+        async function renderPage(pageNum) {
+            if (!currentPDF) return;
+
+            try {
+                const page = await currentPDF.getPage(pageNum);
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                const viewport = page.getViewport({ scale: currentScale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+
+                await page.render(renderContext).promise;
+
+                // Limpiar y mostrar
+                const viewer = document.getElementById('pdf-viewer');
+                viewer.innerHTML = '';
+                canvas.className = 'pdf-canvas';
+                viewer.appendChild(canvas);
+
+            } catch (error) {
+                console.error('Error renderizando página:', error);
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                document.getElementById('current-page').textContent = currentPage;
+                renderPage(currentPage);
+                updateNavigationButtons();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages) {
+                currentPage++;
+                document.getElementById('current-page').textContent = currentPage;
+                renderPage(currentPage);
+                updateNavigationButtons();
+            }
+        }
+
+        function zoomIn() {
+            currentScale += 0.3;
+            renderPage(currentPage);
+        }
+
+        function zoomOut() {
+            if (currentScale > 0.5) {
+                currentScale -= 0.3;
+                renderPage(currentPage);
+            }
+        }
+
+        function resetZoom() {
+            currentScale = 1.5;
+            renderPage(currentPage);
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+
+        function updateActiveButton(clickedButton) {
+            // Remover clase activa de todos los botones
+            document.querySelectorAll('.sidebar-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Agregar clase activa al botón clickeado
+            clickedButton.classList.add('active');
+        }
+
+        // Navegación con teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousPage();
+            if (e.key === 'ArrowRight') nextPage();
+            if (e.key === '+' || e.key === '=') zoomIn();
+            if (e.key === '-') zoomOut();
+            if (e.key === '0') resetZoom();
+        });
+
+        // Mensaje de bienvenida inicial
+        console.log('🚀 Página de Seguridad Web cargada correctamente');
+        console.log('📱 Responsive design activado');
+        console.log('⌨️  Controles de teclado: Flechas (navegación), +/- (zoom), 0 (reset zoom)');
+    </script>
+</body>
+</html> 
